@@ -1,0 +1,69 @@
+networks:
+  net:
+    name: vla-ur-net
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 192.168.100.0/24
+
+services:
+  vla-ur-sim-cpu:
+    build:
+      context: .
+      dockerfile: ./docker/Dockerfile.sim
+    image: vla-ur-sim
+    container_name: vla-ur-sim
+    profiles: 
+      - cpu
+    networks:
+      net:
+        ipv4_address: 192.168.100.36
+    ipc: host
+    privileged: true
+    stdin_open: true
+    tty: true
+    environment:
+      - DISPLAY=${DISPLAY:-}
+      - FASTRTPS_DEFAULT_PROFILES_FILE=/fastdds.xml
+      - MUJOCO_GL=osmesa
+      - PYOPENGL_PLATFORM=osmesa
+      - ROS_DOMAIN_ID=${ROS_DOMAIN_ID:-}
+    volumes:
+      - /tmp/.X11-unix:/tmp/.X11-unix:rw
+      - ${XAUTHORITY:-/tmp/.Xauthority}:/root/.Xauthority
+      - .:/vla_ur
+
+  vla-ur-sim-gpu:
+    build:
+      context: .
+      dockerfile: ./docker/Dockerfile.sim
+    image: vla-ur-sim
+    container_name: vla-ur-sim
+    profiles: 
+      - gpu
+    networks:
+      net:
+        ipv4_address: 192.168.100.36
+    ipc: host
+    privileged: true
+    stdin_open: true
+    tty: true
+    environment:
+      - DISPLAY=${DISPLAY:-}
+      - FASTRTPS_DEFAULT_PROFILES_FILE=/fastdds.xml
+      - MUJOCO_GL=egl
+      - NVIDIA_VISIBLE_DEVICES=all
+      - NVIDIA_DRIVER_CAPABILITIES=graphics,utility,compute
+      - PYOPENGL_PLATFORM=egl
+      - ROS_DOMAIN_ID=${ROS_DOMAIN_ID:-}
+    volumes:
+      - /tmp/.X11-unix:/tmp/.X11-unix:rw
+      - ${XAUTHORITY:-/tmp/.Xauthority}:/root/.Xauthority
+      - .:/vla_ur
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
