@@ -1,5 +1,8 @@
 .dockerignore
 .gitignore
 .vscode
+build
 docs
+install
+log
 README.md
