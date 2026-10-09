@@ -198,8 +198,19 @@ class MuJoCoSimNode
 
 int main(int argc, char** argv)
 {
-    if (argc != 2) mju_error("Provide a model file path as an argument for the simulator.");
+    std::vector<std::string> args(argv, argv + argc);
 
-    MuJoCoSimNode node(argv[1]);
-    node.render();
+    if (argc == 2)
+    {
+        MuJoCoSimNode node(args[1]);
+        node.render();
+        return 0;
+    }
+
+    if (argc > 2 && args[2] == "--ros-args")
+    {
+        MuJoCoSimNode node(args[1]);
+        node.render();
+        return 0;
+    } else mju_error("Provide a model file path as an argument for the simulator.");
 }

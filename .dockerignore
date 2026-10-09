@@ -5,4 +5,5 @@ build
 docs
 install
 log
+MUJOCO_LOG.TXT
 README.md

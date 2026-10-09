@@ -2,7 +2,6 @@
 #include <iostream>
 #include <thread>
 
-#include <ament_index_cpp/get_package_share_directory.hpp>
 #include <mujoco/mujoco.h>
 
 int main(int argc, char **argv)
