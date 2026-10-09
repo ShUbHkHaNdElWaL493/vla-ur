@@ -12,19 +12,22 @@ endif()
 # find dependencies
 find_package(ament_cmake REQUIRED)
 find_package(ament_index_cpp REQUIRED)
+find_package(glfw3 REQUIRED)
 find_package(mujoco REQUIRED)
 
-add_executable(sim_node src/sim_node.cpp)
-ament_target_dependencies(sim_node ament_index_cpp)
-target_link_libraries(sim_node mujoco::mujoco)
+add_executable(check_mjcf src/check_mjcf.cpp)
+target_link_libraries(check_mjcf mujoco::mujoco)
+
+add_executable(mujoco_sim_node src/mujoco_sim_node.cpp)
+target_link_libraries(mujoco_sim_node glfw mujoco::mujoco)
 
 install(
-  TARGETS sim_node
+  TARGETS check_mjcf mujoco_sim_node
   DESTINATION lib/${PROJECT_NAME}
 )
 
 install(
-  DIRECTORY models
+  DIRECTORY launch models
   DESTINATION share/${PROJECT_NAME}
 )
 
