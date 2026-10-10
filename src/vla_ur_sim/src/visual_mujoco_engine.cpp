@@ -1,18 +1,11 @@
-#include <cstdio>
-#include <cstdlib>
-#include <cstring>
-
 #include <GLFW/glfw3.h>
-#include <mujoco/mujoco.h>
 
-class MuJoCoSimNode
+#include "vla_ur_sim/mujoco_engine.hpp"
+
+class VisualMuJoCoEngine : public MuJoCoEngine
 {
 
     private:
-
-    mjModel* model;
-    mjData* data;
-
     GLFWwindow* window;
 
     mjvCamera camera;
@@ -26,7 +19,7 @@ class MuJoCoSimNode
     // keyboard callback
     static void keyboard_callback(GLFWwindow* window, int key, int scancode, int act, int mods)
     {
-        auto* instance = static_cast<MuJoCoSimNode*>(glfwGetWindowUserPointer(window));
+        auto* instance = static_cast<VisualMuJoCoEngine*>(glfwGetWindowUserPointer(window));
         if (instance)
         {
             // backspace: reset simulation
@@ -41,7 +34,7 @@ class MuJoCoSimNode
     // mouse button callback
     static void mouse_button_callback(GLFWwindow* window, int button, int act, int mods)
     {
-        auto* instance = static_cast<MuJoCoSimNode*>(glfwGetWindowUserPointer(window));
+        auto* instance = static_cast<VisualMuJoCoEngine*>(glfwGetWindowUserPointer(window));
         if (instance)
         {
             // update button state
@@ -57,7 +50,7 @@ class MuJoCoSimNode
     // mouse move callback
     static void mouse_move_callback(GLFWwindow* window, double xpos, double ypos)
     {
-        auto* instance = static_cast<MuJoCoSimNode*>(glfwGetWindowUserPointer(window));
+        auto* instance = static_cast<VisualMuJoCoEngine*>(glfwGetWindowUserPointer(window));
         if (instance)
         {
             // no buttons down: nothing to do
@@ -93,7 +86,7 @@ class MuJoCoSimNode
     // scroll callback
     static void scroll_callback(GLFWwindow* window, double xoffset, double yoffset)
     {
-        auto* instance = static_cast<MuJoCoSimNode*>(glfwGetWindowUserPointer(window));
+        auto* instance = static_cast<VisualMuJoCoEngine*>(glfwGetWindowUserPointer(window));
         if (instance)
         {
             // emulate vertical mouse motion = 5% of window height
@@ -103,23 +96,11 @@ class MuJoCoSimNode
 
     public:
 
-    MuJoCoSimNode(std::string model_file) :
-    model(NULL), data(NULL),
+    VisualMuJoCoEngine(std::string model_file) :
+    MuJoCoEngine(model_file),
     button_left(false), button_middle(false), button_right(false),
     lastx(0), lasty(0)
     {
-        char error[1000] = "";
-        model = mj_loadXML(model_file.c_str(), 0, error, 1000);
-        if (!model) mju_error("Error in loading model: %s", error);
-
-        // make data
-        data = mj_makeData(model);
-        if (!data)
-        {
-            mj_deleteModel(model);
-            mju_error("Error in allocating data.");
-        }
-
         // init GLFW
         if (!glfwInit()) mju_error("Error in initializing GLFW.");
 
@@ -151,15 +132,11 @@ class MuJoCoSimNode
         glfwSetScrollCallback(window, scroll_callback);
     }
 
-    ~MuJoCoSimNode()
+    ~VisualMuJoCoEngine()
     {
         // free visualization storage
         mjv_freeScene(&scene);
         mjr_freeContext(&context);
-
-        // free MuJoCo model and data
-        mj_deleteData(data);
-        mj_deleteModel(model);
 
         // terminate GLFW (crashes with Linux NVidia drivers)
         #if defined(__APPLE__) || defined(_WIN32)
@@ -167,7 +144,7 @@ class MuJoCoSimNode
         #endif
     }
 
-    void render()
+    void loop() override
     {
         while (!glfwWindowShouldClose(window))
         {
@@ -202,15 +179,15 @@ int main(int argc, char** argv)
 
     if (argc == 2)
     {
-        MuJoCoSimNode node(args[1]);
-        node.render();
+        VisualMuJoCoEngine node(args[1]);
+        node.loop();
         return 0;
     }
 
     if (argc > 2 && args[2] == "--ros-args")
     {
-        MuJoCoSimNode node(args[1]);
-        node.render();
+        VisualMuJoCoEngine node(args[1]);
+        node.loop();
         return 0;
-    } else mju_error("Provide a model file path as an argument for the simulator.");
+    } else mju_error("Check executable arguments.");
 }

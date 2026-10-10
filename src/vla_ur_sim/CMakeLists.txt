@@ -9,6 +9,8 @@ if(NOT CMAKE_CXX_STANDARD)
   set(CMAKE_CXX_STANDARD 17)
 endif()
 
+include_directories(include)
+
 # find dependencies
 find_package(ament_cmake REQUIRED)
 find_package(ament_index_cpp REQUIRED)
@@ -18,17 +20,25 @@ find_package(mujoco REQUIRED)
 add_executable(check_mjcf src/check_mjcf.cpp)
 target_link_libraries(check_mjcf mujoco::mujoco)
 
-add_executable(mujoco_sim_node src/mujoco_sim_node.cpp)
-target_link_libraries(mujoco_sim_node glfw mujoco::mujoco)
+add_executable(headless_mujoco_engine src/headless_mujoco_engine.cpp)
+target_link_libraries(headless_mujoco_engine mujoco::mujoco)
+
+add_executable(visual_mujoco_engine src/visual_mujoco_engine.cpp)
+target_link_libraries(visual_mujoco_engine glfw mujoco::mujoco)
 
 install(
-  TARGETS check_mjcf mujoco_sim_node
-  DESTINATION lib/${PROJECT_NAME}
+  DIRECTORY include/
+  DESTINATION include/
 )
 
 install(
   DIRECTORY launch models
   DESTINATION share/${PROJECT_NAME}
+)
+
+install(
+  TARGETS check_mjcf headless_mujoco_engine visual_mujoco_engine
+  DESTINATION lib/${PROJECT_NAME}
 )
 
 if(BUILD_TESTING)
